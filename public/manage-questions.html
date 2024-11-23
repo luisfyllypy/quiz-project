@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gerenciar Perguntas</title>
+  <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Gerenciar Perguntas</h1>
+    <div id="questionsList" class="questions-list">
+      <p>Carregando perguntas...</p>
+    </div>
+    <button class="add-question-btn" onclick="addQuestion()">Adicionar Nova Pergunta</button>
+    <a href="manage-groups.html">Voltar</a>
+  </div>
+
+  <script>
+    let groupId = sessionStorage.getItem('groupId');
+
+    if (!groupId) {
+      alert('Nenhum grupo selecionado. Retornando para a página de grupos.');
+      window.location.href = 'manage-groups.html';
+    }
+
+    async function fetchQuestions() {
+      try {
+        const response = await fetch(`/api/questions/group/${groupId}`);
+        const questions = await response.json();
+
+        if (response.ok) {
+          renderQuestions(questions);
+        } else {
+          document.getElementById('questionsList').innerHTML = `<p>Erro: ${questions.error}</p>`;
+        }
+      } catch (error) {
+        document.getElementById('questionsList').innerHTML = `<p>Erro ao carregar perguntas. Tente novamente mais tarde.</p>`;
+      }
+    }
+
+    function renderQuestions(questions) {
+      const questionsList = document.getElementById('questionsList');
+      if (questions.length === 0) {
+        questionsList.innerHTML = '<p>Este grupo ainda não possui perguntas.</p>';
+        return;
+      }
+
+      questionsList.innerHTML = '';
+      questions.forEach((question) => {
+        const questionItem = document.createElement('div');
+        questionItem.classList.add('question-item');
+        questionItem.innerHTML = `
+          <h3>${question.texto_pergunta}</h3>
+          <p>A: ${question.alternativa_a}</p>
+          <p>B: ${question.alternativa_b}</p>
+          <p>C: ${question.alternativa_c}</p>
+          <p>D: ${question.alternativa_d}</p>
+          <p><strong>Correta:</strong> ${question.alternativa_correta}</p>
+          <button onclick="editQuestion(${question.id_pergunta})">Editar</button>
+          <button onclick="deleteQuestion(${question.id_pergunta})">Excluir</button>
+        `;
+        questionsList.appendChild(questionItem);
+      });
+    }
+
+    async function addQuestion() {
+      sessionStorage.setItem('action', 'add');
+      window.location.href = 'edit-question.html';
+    }
+
+    async function editQuestion(id_pergunta) {
+      console.log('Editando pergunta com ID:', id_pergunta); // Deve aparecer ao clicar em "Editar"
+      sessionStorage.setItem('action', 'edit');
+      sessionStorage.setItem('questionId', id_pergunta);
+      window.location.href = 'edit-question.html';
+    }
+
+
+    async function deleteQuestion(id_pergunta) {
+      if (!confirm('Tem certeza que deseja excluir esta pergunta?')) return;
+
+      try {
+        const response = await fetch(`/api/questions/${id_pergunta}`, { method: 'DELETE' });
+        if (response.ok) {
+          alert('Pergunta excluída com sucesso!');
+          fetchQuestions(); // Atualiza a lista de perguntas
+        } else {
+          alert('Erro ao excluir a pergunta.');
+        }
+      } catch (error) {
+        alert('Erro ao tentar excluir a pergunta. Tente novamente mais tarde.');
+      }
+    }
+
+    // Carregar as perguntas ao abrir a página
+    fetchQuestions();
+  </script>
+</body>
+</html>

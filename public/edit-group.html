@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Editar Grupo</title>
+  <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Editar Grupo</h1>
+    <form id="editGroupForm">
+      <label for="titulo">Título do Grupo:</label>
+      <input type="text" id="titulo" name="titulo" required>
+
+      <label for="descricao">Descrição:</label>
+      <textarea id="descricao" name="descricao" rows="4"></textarea>
+
+      <label for="ordem_fixa">Exibir perguntas em ordem fixa?</label>
+      <select id="ordem_fixa" name="ordem_fixa">
+        <option value="true">Sim</option>
+        <option value="false">Não</option>
+      </select>
+
+      <button type="submit">Salvar</button>
+    </form>
+    <a href="manage-groups.html">Voltar</a>
+  </div>
+
+  <script>
+    const form = document.getElementById('editGroupForm');
+    const groupId = sessionStorage.getItem('groupId');
+
+    if (!groupId) {
+      alert('Nenhum grupo selecionado. Retornando para a página de grupos.');
+      window.location.href = 'manage-groups.html';
+    }
+
+    async function fetchGroupData() {
+      try {
+        const response = await fetch(`/api/groups/single/${groupId}`);
+        const group = await response.json();
+
+        if (response.ok) {
+          document.getElementById('titulo').value = group.titulo;
+          document.getElementById('descricao').value = group.descricao || '';
+          document.getElementById('ordem_fixa').value = group.ordem_fixa ? 'true' : 'false';
+        } else {
+          alert('Erro ao carregar dados do grupo.');
+          window.location.href = 'manage-groups.html';
+        }
+      } catch (error) {
+        alert('Erro ao carregar dados do grupo. Tente novamente mais tarde.');
+        window.location.href = 'manage-groups.html';
+      }
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const titulo = document.getElementById('titulo').value;
+      const descricao = document.getElementById('descricao').value || null;
+      const ordem_fixa = document.getElementById('ordem_fixa').value === 'true';
+
+      try {
+        const response = await fetch(`/api/groups/${groupId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ titulo, descricao, ordem_fixa })
+        });
+
+        if (response.ok) {
+          alert('Grupo atualizado com sucesso!');
+          window.location.href = 'manage-groups.html';
+        } else {
+          alert('Erro ao atualizar grupo.');
+        }
+      } catch (error) {
+        alert('Erro ao tentar atualizar o grupo. Tente novamente mais tarde.');
+      }
+    });
+
+    fetchGroupData(); // Carregar os dados do grupo ao abrir a página
+  </script>
+</body>
+</html>

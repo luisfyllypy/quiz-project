@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Criar Sala</title>
+  <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Criar Sala de Jogo</h1>
+    <form id="createRoomForm">
+      <label for="grupo">Selecione um Grupo de Perguntas:</label>
+      <select id="grupo" name="grupo" required>
+        <option value="" disabled selected>Carregando grupos...</option>
+      </select>
+
+      <label for="nome_sala">Nome da Sala (Opcional):</label>
+      <input type="text" id="nome_sala" name="nome_sala" placeholder="Ex: Aula de Matemática">
+
+      <button type="submit">Criar Sala</button>
+    </form>
+    <a href="dashboard.html">Voltar</a>
+  </div>
+
+  <script>
+    const form = document.getElementById('createRoomForm');
+    const user = JSON.parse(sessionStorage.getItem('user'));
+
+    if (!user) {
+      alert('Você precisa estar logado para criar uma sala.');
+      window.location.href = 'login.html';
+    }
+
+    async function fetchGroups() {
+      try {
+        const response = await fetch(`/api/groups/${user.id_usuario}`);
+        const groups = await response.json();
+
+        if (response.ok) {
+          renderGroups(groups);
+        } else {
+          document.getElementById('grupo').innerHTML = `<option value="" disabled>Erro ao carregar grupos</option>`;
+        }
+      } catch (error) {
+        document.getElementById('grupo').innerHTML = `<option value="" disabled>Erro ao carregar grupos</option>`;
+      }
+    }
+
+    function renderGroups(groups) {
+      const grupoSelect = document.getElementById('grupo');
+      grupoSelect.innerHTML = '';
+      if (groups.length === 0) {
+        grupoSelect.innerHTML = `<option value="" disabled>Nenhum grupo disponível</option>`;
+        return;
+      }
+
+      groups.forEach((group) => {
+        const option = document.createElement('option');
+        option.value = group.id_grupo;
+        option.textContent = group.titulo;
+        grupoSelect.appendChild(option);
+      });
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const id_grupo = document.getElementById('grupo').value;
+      const nome_sala = document.getElementById('nome_sala').value || `Sala de ${user.nome}`;
+
+      try {
+        const response = await fetch('/api/rooms', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id_usuario: user.id_usuario, id_grupo, nome_sala })
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+          sessionStorage.setItem('isHost', true); // Define que o usuário é o professor
+          sessionStorage.setItem('roomId', result.id); // Salva o ID da sala
+          sessionStorage.setItem('roomCode', result.codigo_sala); // Salva o código da sala
+          window.location.href = 'room.html'; // Redireciona para o quiz
+        } else {
+          alert(`Erro: ${result.error}`);
+        }
+      } catch (error) {
+        alert('Erro ao criar sala. Tente novamente mais tarde.');
+      }
+    });
+
+    fetchGroups();
+  </script>
+</body>
+</html>

@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gerenciar Grupos</title>
+  <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Meus Grupos</h1>
+    <div id="groupsList" class="groups-list">
+      <p>Carregando seus grupos...</p>
+    </div>
+    <a href="dashboard.html">Voltar</a>
+  </div>
+
+  <script>
+    async function fetchGroups() {
+      const user = JSON.parse(sessionStorage.getItem('user'));
+      if (!user) {
+        alert('Você precisa estar logado para acessar seus grupos.');
+        window.location.href = 'login.html';
+        return;
+      }
+  
+      try {
+        const response = await fetch(`/api/groups/${user.id_usuario}`);
+        const groups = await response.json();
+  
+        if (response.ok) {
+          renderGroups(groups);
+        } else {
+          document.getElementById('groupsList').innerHTML = `<p>Erro: ${groups.error}</p>`;
+        }
+      } catch (error) {
+        document.getElementById('groupsList').innerHTML = `<p>Erro ao carregar grupos. Tente novamente mais tarde.</p>`;
+      }
+    }
+  
+    function renderGroups(groups) {
+      const groupsList = document.getElementById('groupsList');
+      if (groups.length === 0) {
+        groupsList.innerHTML = '<p>Você ainda não criou nenhum grupo de perguntas.</p>';
+        return;
+      }
+  
+      groupsList.innerHTML = '';
+      groups.forEach((group) => {
+        const groupItem = document.createElement('div');
+        groupItem.classList.add('group-item');
+        groupItem.innerHTML = `
+          <h3>${group.titulo}</h3>
+          <p>${group.descricao || 'Sem descrição'}</p>
+          <button onclick="editGroup(${group.id_grupo})">Editar</button>
+          <button onclick="deleteGroup(${group.id_grupo})">Excluir</button>
+          <button onclick="manageQuestions(${group.id_grupo})">Gerenciar Perguntas</button>
+        `;
+        groupsList.appendChild(groupItem);
+      });
+    }
+  
+    function editGroup(id_grupo) {
+      sessionStorage.setItem('groupId', id_grupo);
+      window.location.href = 'edit-group.html';
+    }
+  
+    async function deleteGroup(id_grupo) {
+      if (!confirm('Tem certeza que deseja excluir este grupo?')) return;
+  
+      try {
+        const response = await fetch(`/api/groups/${id_grupo}`, { method: 'DELETE' });
+        if (response.ok) {
+          alert('Grupo excluído com sucesso!');
+          fetchGroups(); // Atualiza a lista de grupos
+        } else {
+          alert('Erro ao excluir o grupo.');
+        }
+      } catch (error) {
+        alert('Erro ao tentar excluir o grupo. Tente novamente mais tarde.');
+      }
+    }
+  
+    async function manageQuestions(id_grupo) {
+      sessionStorage.setItem('groupId', id_grupo);
+      window.location.href = 'manage-questions.html';
+    }
+  
+    fetchGroups(); // Carregar os grupos ao abrir a página
+  </script>
+</body>
+</html>

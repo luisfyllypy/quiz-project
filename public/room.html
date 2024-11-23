@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sala de Jogo</title>
+  <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+  <div class="container">
+    <h1 id="roomTitle">Sala de Jogo</h1>
+    <div class="room-details">
+      <p><strong>Código da Sala:</strong> <span id="roomCode">Carregando...</span></p>
+      <button id="toggleCodeBtn">Ocultar Código</button>
+    </div>
+    <div class="participants">
+      <h2>Participantes (<span id="participantCount">0</span>)</h2>
+      <ul id="participantList">
+        <li>Carregando...</li>
+      </ul>
+    </div>
+    <button id="startGameBtn">Iniciar Jogo</button>
+    <a href="dashboard.html">Voltar</a>
+  </div>
+
+  <script>
+    const roomCode = sessionStorage.getItem('roomCode');
+    const roomId = sessionStorage.getItem('roomId');
+
+    if (!roomCode || !roomId) {
+      alert('Sala não encontrada. Retornando ao dashboard.');
+      window.location.href = 'dashboard.html';
+    }
+
+    document.getElementById('roomCode').textContent = roomCode;
+
+    // Alternar exibição do código da sala
+    const toggleCodeBtn = document.getElementById('toggleCodeBtn');
+    toggleCodeBtn.addEventListener('click', () => {
+      const roomCodeElement = document.getElementById('roomCode');
+      if (roomCodeElement.style.display === 'none') {
+        roomCodeElement.style.display = 'inline';
+        toggleCodeBtn.textContent = 'Ocultar Código';
+      } else {
+        roomCodeElement.style.display = 'none';
+        toggleCodeBtn.textContent = 'Mostrar Código';
+      }
+    });
+
+    // Atualizar lista de participantes em tempo real
+    async function fetchParticipants() {
+      try {
+        const response = await fetch(`/api/rooms/${roomId}/participants`);
+        const participants = await response.json();
+
+        if (response.ok) {
+          renderParticipants(participants);
+        } else {
+          alert('Erro ao carregar participantes.');
+        }
+      } catch (error) {
+        alert('Erro ao carregar participantes. Tente novamente mais tarde.');
+      }
+    }
+
+    function renderParticipants(participants) {
+      const participantList = document.getElementById('participantList');
+      const participantCount = document.getElementById('participantCount');
+      participantList.innerHTML = '';
+      participants.forEach((participant) => {
+        const li = document.createElement('li');
+        li.textContent = participant.nome;
+        participantList.appendChild(li);
+      });
+      participantCount.textContent = participants.length;
+    }
+
+    setInterval(fetchParticipants, 2000); // Atualiza a cada 2 segundos
+
+    // Iniciar o jogo
+    document.getElementById('startGameBtn').addEventListener('click', async () => {
+      try {
+        const response = await fetch(`/api/rooms/${roomId}/start`, { method: 'PUT' });
+
+        if (response.ok) {
+          alert('Jogo iniciado com sucesso!');
+          // Redirecionar para a página do quiz
+          window.location.href = 'quiz.html';
+        } else {
+          alert('Erro ao iniciar o jogo. Tente novamente.');
+        }
+      } catch (error) {
+        alert('Erro ao tentar iniciar o jogo. Tente novamente mais tarde.');
+      }
+    });
+
+    fetchParticipants();
+  </script>
+</body>
+</html>

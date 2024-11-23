@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Criar Grupo de Perguntas</title>
+  <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Criar Grupo de Perguntas</h1>
+    <form id="createGroupForm">
+      <label for="titulo">Título do Grupo:</label>
+      <input type="text" id="titulo" name="titulo" required>
+
+      <label for="descricao">Descrição (Opcional):</label>
+      <textarea id="descricao" name="descricao" rows="4" placeholder="Descreva o grupo de perguntas..."></textarea>
+
+      <label for="ordem_fixa">Exibir perguntas em ordem fixa?</label>
+      <select id="ordem_fixa" name="ordem_fixa">
+        <option value="true">Sim</option>
+        <option value="false" selected>Não</option>
+      </select>
+
+      <button type="submit">Criar Grupo</button>
+    </form>
+    <a href="dashboard.html">Voltar</a>
+  </div>
+
+  <script>
+    const form = document.getElementById('createGroupForm');
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const user = JSON.parse(sessionStorage.getItem('user'));
+      if (!user) {
+        alert('Você precisa estar logado para criar um grupo.');
+        window.location.href = 'login.html';
+        return;
+      }
+
+      const id_usuario = user.id_usuario;
+      const titulo = document.getElementById('titulo').value;
+      const descricao = document.getElementById('descricao').value || null;
+      const ordem_fixa = document.getElementById('ordem_fixa').value === 'true';
+
+      try {
+        const response = await fetch('/api/groups', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id_usuario, titulo, descricao, ordem_fixa })
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+          alert('Grupo criado com sucesso!');
+          window.location.href = 'dashboard.html';
+        } else {
+          alert(`Erro: ${result.error}`);
+        }
+      } catch (error) {
+        alert('Erro ao tentar criar o grupo. Tente novamente mais tarde.');
+      }
+    });
+  </script>
+</body>
+</html>

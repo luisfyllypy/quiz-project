@@ -1,0 +1,582 @@
+/* Estilos Globais */
+body {
+  font-family: 'Arial', sans-serif;
+  margin: 0;
+  padding: 0;
+  background: linear-gradient(135deg, #6a11cb, #2575fc);
+  color: #fff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+.container {
+  background: #ffffff;
+  color: #333;
+  border-radius: 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  padding: 30px 20px;
+  width: 90%;
+  max-width: 400px;
+  text-align: center;
+}
+
+h1 {
+  font-size: 2rem;
+  margin-bottom: 20px;
+  color: #6a11cb;
+}
+
+/* Botões da Página Principal */
+.buttons button {
+  width: 100%;
+  background: #6a11cb;
+  color: #fff;
+  border: none;
+  padding: 15px;
+  margin: 10px 0;
+  font-size: 1rem;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.buttons button:hover {
+  background: #2575fc;
+  transform: scale(1.05);
+}
+
+/* Formulários */
+form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+form label {
+  font-size: 1rem;
+  font-weight: bold;
+  margin-top: 15px;
+  align-self: flex-start;
+}
+
+form input {
+  width: 100%;
+  padding: 10px;
+  margin-top: 5px;
+  margin-bottom: 15px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 1rem;
+  background: #f9f9f9;
+}
+
+form input:focus {
+  outline: none;
+  border-color: #6a11cb;
+}
+
+form button {
+  width: 100%;
+  padding: 10px;
+  background: #6a11cb;
+  color: #fff;
+  border: none;
+  font-size: 1rem;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+form button:hover {
+  background: #2575fc;
+  transform: scale(1.05);
+}
+
+/* Links */
+a {
+  color: #6a11cb;
+  text-decoration: none;
+  margin-top: 15px;
+  font-size: 0.9rem;
+  display: block;
+  text-align: center; /* Centraliza o link */
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* Container específico para o dashboard */
+.dashboard-container {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.dashboard-container h1 {
+  font-size: 2rem;
+  margin-bottom: 30px;
+  color: #6a11cb;
+  text-transform: uppercase; /* Deixa o texto em maiúsculas */
+}
+
+/* Estilo dos botões do dashboard */
+.dashboard-options button {
+  width: 100%;
+  background: #2575fc;
+  color: #fff;
+  border: none;
+  padding: 15px;
+  margin: 10px 0;
+  font-size: 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase; /* Deixa o texto em maiúsculas */
+  font-weight: bold;
+}
+
+.dashboard-options button:hover {
+  background: #6a11cb;
+  transform: scale(1.05);
+}
+
+/* Botão de logout */
+.logout {
+  width: 100%;
+  background: #ff4d4f;
+  color: #fff;
+  border: none;
+  padding: 10px;
+  font-size: 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 20px;
+  font-weight: bold;
+}
+
+.logout:hover {
+  background: #e63946;
+  transform: scale(1.05);
+}
+
+/* Estilo para o formulário de criação de grupo */
+textarea {
+  width: 100%;
+  padding: 10px;
+  margin-top: 5px;
+  margin-bottom: 15px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 1rem;
+  background: #f9f9f9;
+  resize: none;
+}
+
+textarea:focus {
+  outline: none;
+  border-color: #6a11cb;
+}
+
+select {
+  width: 100%;
+  padding: 10px;
+  margin-top: 5px;
+  margin-bottom: 15px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 1rem;
+  background: #f9f9f9;
+}
+
+select:focus {
+  outline: none;
+  border-color: #6a11cb;
+}
+
+/* Botão do formulário */
+form button {
+  background: linear-gradient(90deg, #6a11cb, #2575fc);
+  border: none;
+  color: white;
+  font-size: 1rem;
+  padding: 12px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: bold;
+  width: 100%;
+  margin-top: 15px;
+}
+
+form button:hover {
+  background: linear-gradient(90deg, #2575fc, #6a11cb);
+  transform: scale(1.05);
+}
+
+/* Estilo específico para a página de criação */
+.container h1 {
+  font-size: 2rem;
+  margin-bottom: 20px;
+  color: #6a11cb;
+  text-transform: uppercase;
+  font-weight: bold;
+}
+
+form label {
+  font-size: 1rem;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 5px;
+  display: block;
+  text-align: left;
+}
+
+form input,
+form textarea,
+form select {
+  font-family: 'Arial', sans-serif;
+  transition: all 0.3s ease;
+}
+
+form input:focus,
+form textarea:focus,
+form select:focus {
+  box-shadow: 0 0 5px rgba(106, 17, 203, 0.5);
+}
+
+/* Estilo específico para a gerenciamento de grupos */ 
+.groups-list {
+  margin-top: 20px;
+}
+
+.group-item {
+  background: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 15px;
+  margin-bottom: 15px;
+  text-align: left;
+}
+
+.group-item h3 {
+  font-size: 1.2rem;
+  color: #6a11cb;
+  margin-top: 0;
+}
+
+.group-item p {
+  margin: 10px 0 20px 0;
+  color: #666;
+}
+
+.group-item button {
+  background: #2575fc;
+  color: #fff;
+  border: none;
+  padding: 10px 15px;
+  margin-right: 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+}
+
+.group-item button:hover {
+  background: #6a11cb;
+}
+
+/* Estilo específico para a gerenciamento de perguntas */
+.questions-list {
+  margin-top: 20px;
+}
+
+.question-item {
+  background: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 15px;
+  margin-bottom: 15px;
+  text-align: left;
+}
+
+.question-item h3 {
+  font-size: 1.2rem;
+  color: #6a11cb;
+}
+
+.question-item p {
+  margin: 5px 0;
+  color: #666;
+}
+
+.question-item button {
+  background: #2575fc;
+  color: #fff;
+  border: none;
+  padding: 10px 15px;
+  margin-right: 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+}
+
+.question-item button:hover {
+  background: #6a11cb;
+}
+
+.add-question-btn {
+  width: 100%;
+  background: linear-gradient(90deg, #28a745, #218838);
+  color: #fff;
+  border: none;
+  padding: 15px;
+  margin-top: 20px;
+  font-size: 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+}
+
+.add-question-btn:hover {
+  background: linear-gradient(90deg, #218838, #28a745);
+  transform: scale(1.05);
+}
+
+.add-question-btn:focus {
+  outline: none;
+  box-shadow: 0 0 10px rgba(40, 167, 69, 0.5);
+}
+
+/* Estilo específico para formulário de salas */
+#grupo {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 15px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  background: #f9f9f9;
+}
+
+#grupo:focus {
+  outline: none;
+  border-color: #6a11cb;
+}
+
+#nome_sala {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 15px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  background: #f9f9f9;
+}
+
+#nome_sala:focus {
+  outline: none;
+  border-color: #6a11cb;
+}
+
+/* Estilo para a página da sala */
+.room-details {
+  background: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.room-details p {
+  font-size: 1.2rem;
+  color: #333;
+}
+
+#roomCode {
+  font-weight: bold;
+  font-size: 1.5rem;
+  color: #2575fc;
+}
+
+#toggleCodeBtn {
+  background: #6a11cb;
+  color: #fff;
+  border: none;
+  padding: 10px 15px;
+  margin-top: 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+#toggleCodeBtn:hover {
+  background: #2575fc;
+}
+
+/* Lista de participantes */
+.participants {
+  margin-top: 20px;
+}
+
+.participants h2 {
+  font-size: 1.5rem;
+  color: #6a11cb;
+  margin-bottom: 10px;
+}
+
+#participantList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  background: #ffffff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+#participantList li {
+  padding: 10px;
+  border-bottom: 1px solid #ddd;
+  color: #333;
+}
+
+#participantList li:last-child {
+  border-bottom: none;
+}
+
+/* Botão de iniciar jogo */
+#startGameBtn {
+  background: #28a745;
+  color: #fff;
+  border: none;
+  padding: 15px 20px;
+  margin-top: 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1.2rem;
+  font-weight: bold;
+  transition: all 0.3s ease;
+}
+
+#startGameBtn:hover {
+  background: #218838;
+  transform: scale(1.05);
+}
+
+/* Estilo para o quiz */
+#quizContent {
+  margin-top: 20px;
+}
+
+#questionSection h2 {
+  font-size: 1.5rem;
+  color: #6a11cb;
+  margin-bottom: 10px;
+}
+
+#optionsList {
+  list-style: none;
+  padding: 0;
+}
+
+#optionsList li {
+  background: #f9f9f9;
+  border: 1px solid #ddd;
+  padding: 10px 15px;
+  margin-bottom: 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+#optionsList li:hover {
+  background: #e6e6e6;
+}
+
+#progressSection {
+  margin-top: 20px;
+}
+
+#progressSection p {
+  font-size: 1rem;
+  color: #333;
+}
+
+#nextQuestionBtn {
+  background: #2575fc;
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  margin-top: 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: bold;
+  transition: all 0.3s ease;
+}
+
+#nextQuestionBtn:hover {
+  background: #6a11cb;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+  .container {
+    padding: 20px;
+    width: 100%;
+  }
+
+  h1 {
+    font-size: 1.5rem;
+  }
+
+  form button,
+  .buttons button {
+    font-size: 0.9rem;
+    padding: 10px;
+  }
+
+  .dashboard-container h1 {
+    font-size: 1.5rem;
+  }
+
+  .dashboard-options button,
+  .logout {
+    font-size: 0.9rem;
+    padding: 10px;
+  }
+
+  form button {
+    font-size: 0.9rem;
+  }
+
+  textarea {
+    font-size: 0.9rem;
+  }
+
+  .room-details p,
+  #roomCode {
+    font-size: 1rem;
+  }
+
+  #toggleCodeBtn,
+  #startGameBtn {
+    font-size: 1rem;
+    padding: 10px 15px;
+  }
+
+  .participants h2 {
+    font-size: 1.2rem;
+  }
+
+  #participantList li {
+    padding: 8px;
+  }
+}
