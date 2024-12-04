@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gerenciar Salas</title>
+  <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Gerenciar Salas</h1>
+    <div class="table-container">
+      <table id="roomsTable" class="rooms-table">
+        <thead>
+          <tr>
+            <th>Nome da Sala</th>
+            <th>Data de Criação</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- As salas serão carregadas dinamicamente -->
+        </tbody>
+      </table>
+    </div>
+    <button onclick="location.href='dashboard.html'" class="back-btn">Voltar</button>
+  </div>
+
+  <script>
+    const user = JSON.parse(sessionStorage.getItem('user'));
+    if (!user) {
+      alert('Você precisa estar logado para acessar esta página.');
+      window.location.href = 'login.html';
+    }
+
+    const roomsTableBody = document.querySelector('#roomsTable tbody');
+
+    // Função para carregar salas
+    async function loadRooms() {
+      try {
+        const response = await fetch(`/api/rooms/${user.id_usuario}`);
+        const rooms = await response.json();
+
+        if (response.ok) {
+          if (rooms.length === 0) {
+            roomsTableBody.innerHTML = '<tr><td colspan="3">Nenhuma sala encontrada.</td></tr>';
+          } else {
+            roomsTableBody.innerHTML = rooms.map((room) => `
+              <tr>
+                <td>${room.nome_sala || 'Sem nome'}</td>
+                <td>${new Date(room.data_criacao).toLocaleString()}</td>
+                <td>
+                  <button class="view-ranking-btn" onclick="viewRanking(${room.id_sala})">Ver Ranking</button>
+                  <button class="delete-room-btn" onclick="deleteRoom(${room.id_sala})">Excluir</button>
+                </td>
+              </tr>
+            `).join('');
+          }
+        } else {
+          alert('Erro ao carregar salas.');
+        }
+      } catch (error) {
+        console.error('Erro ao carregar salas:', error);
+        alert('Erro ao carregar salas. Tente novamente mais tarde.');
+      }
+    }
+
+    // Função para excluir uma sala
+    async function deleteRoom(id_sala) {
+      if (confirm('Tem certeza de que deseja excluir esta sala?')) {
+        try {
+          const response = await fetch(`/api/rooms/${id_sala}`, { method: 'DELETE' });
+          if (response.ok) {
+            alert('Sala excluída com sucesso!');
+            loadRooms(); // Recarrega a lista de salas
+          } else {
+            alert('Erro ao excluir a sala.');
+          }
+        } catch (error) {
+          console.error('Erro ao excluir sala:', error);
+          alert('Erro ao excluir a sala. Tente novamente mais tarde.');
+        }
+      }
+    }
+
+    // Função para visualizar o ranking
+    async function viewRanking(id_sala) {
+      try {
+        const response = await fetch(`/api/rooms/${id_sala}/ranking`);
+        const ranking = await response.json();
+
+        if (response.ok) {
+          const rankingHTML = ranking.map((player, index) => `
+            <tr>
+              <td>${index + 1}</td>
+              <td>${player.nome}</td>
+              <td>${player.pontos} pontos</td>
+            </tr>
+          `).join('');
+
+          document.body.innerHTML = `
+            <div class="container">
+              <h1>Ranking da Sala</h1>
+              <table class="ranking-table">
+                <thead>
+                  <tr>
+                    <th>Posição</th>
+                    <th>Nome</th>
+                    <th>Pontos</th>
+                  </tr>
+                </thead>
+                <tbody>${rankingHTML}</tbody>
+              </table>
+              <button onclick="location.reload()" class="back-btn">Voltar</button>
+            </div>
+          `;
+        } else {
+          alert('Erro ao carregar o ranking.');
+        }
+      } catch (error) {
+        console.error('Erro ao carregar ranking:', error);
+        alert('Erro ao carregar ranking. Tente novamente mais tarde.');
+      }
+    }
+
+    loadRooms(); // Carrega as salas ao carregar a página
+  </script>
+</body>
+</html>

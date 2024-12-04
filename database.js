@@ -58,6 +58,7 @@ const createOrUpdateTables = () => {
         id_grupo INTEGER,
         nome_sala TEXT, -- Adicionada a coluna "nome_sala"
         status TEXT DEFAULT 'ativa',
+        current_question INTEGER DEFAULT 0, -- Adicionada a coluna "current_question"
         data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (id_usuario) REFERENCES usuarios(id_usuario),
         FOREIGN KEY (id_grupo) REFERENCES grupos_perguntas(id_grupo)
@@ -84,6 +85,7 @@ const createOrUpdateTables = () => {
         resposta CHAR(1),
         correta BOOLEAN,
         tempo_resposta INTEGER,
+        pontos INTEGER DEFAULT 0, -- Adicionada a coluna "pontos"
         FOREIGN KEY (id_sala) REFERENCES salas(id_sala),
         FOREIGN KEY (id_participante) REFERENCES participantes(id_participante),
         FOREIGN KEY (id_pergunta) REFERENCES perguntas(id_pergunta)
@@ -102,17 +104,25 @@ const createOrUpdateTables = () => {
       );
     `);
 
-    // Adicionar coluna "nome_sala" caso não exista
-    db.run(`ALTER TABLE salas ADD COLUMN nome_sala TEXT`, (err) => {
-      if (err) {
-        if (err.message.includes('duplicate column name')) {
-          console.log('A coluna "nome_sala" já existe na tabela "salas".');
+    // Adicionar colunas caso não existam
+    const alterTableQueries = [
+      `ALTER TABLE salas ADD COLUMN nome_sala TEXT`,
+      `ALTER TABLE salas ADD COLUMN current_question INTEGER DEFAULT 0`,
+      `ALTER TABLE respostas ADD COLUMN pontos INTEGER DEFAULT 0`
+    ];
+
+    alterTableQueries.forEach((query) => {
+      db.run(query, (err) => {
+        if (err) {
+          if (err.message.includes('duplicate column name')) {
+            console.log(`A coluna já existe: ${query}`);
+          } else {
+            console.error(`Erro ao executar query: ${query}`, err.message);
+          }
         } else {
-          console.error('Erro ao adicionar a coluna "nome_sala":', err.message);
+          console.log(`Query executada com sucesso: ${query}`);
         }
-      } else {
-        console.log('Coluna "nome_sala" adicionada com sucesso.');
-      }
+      });
     });
 
     console.log('Tabelas criadas ou atualizadas com sucesso!');

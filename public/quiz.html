@@ -9,137 +9,196 @@
 <body>
   <div class="container">
     <h1 id="quizTitle">Quiz: <span id="quizName">Carregando...</span></h1>
-    <div id="waitingMessage" style="display: none;">
-      <h2>Aguardando o professor iniciar o jogo...</h2>
+    <div id="quizContent">
+      <div id="waitingSection" style="display: none;">
+        <h2>Aguardando o professor iniciar o jogo...</h2>
+      </div>
+      <div id="questionsContainer" style="display: none;">
+        <!-- Todas as perguntas serão renderizadas aqui -->
+      </div>
+      <div id="controlsSection" style="display: none;">
+        <button id="finishQuizBtn" class="btn btn-danger">Encerrar Quiz</button>
+      </div>
     </div>
-    <div id="quizContent" style="display: none;">
-      <div id="questionSection">
-        <h2 id="questionText">Carregando pergunta...</h2>
-        <ul id="optionsList">
-          <!-- Alternativas aparecem aqui -->
-        </ul>
-      </div>
-      <div id="progressSection">
-        <p><strong>Respostas:</strong> <span id="answersText">0 / 0</span></p>
-      </div>
-      <div id="scoreSection" style="display: none;">
-        <h2>Placar</h2>
-        <ul id="scoreList">
-          <!-- Placar aparece aqui -->
-        </ul>
-      </div>
-      <button id="nextQuestionBtn" style="display: none;">Próxima Pergunta</button>
-    </div>
-    <a href="dashboard.html" id="exitQuizBtn">Sair</a>
+    <a href="dashboard.html" id="exitQuizBtn" class="btn btn-secondary">Sair</a>
   </div>
 
   <script>
-    const isHost = sessionStorage.getItem('isHost') === 'true'; // Verifica se é o chefe
+    const isHost = sessionStorage.getItem('isHost') === 'true'; // Verifica se é o chefe da sala
     const roomId = sessionStorage.getItem('roomId');
-    let currentQuestionIndex = 0;
     let questions = [];
-    let totalParticipants = 0;
-    let answersCount = 0;
+    let gameState = 'waiting'; // waiting, in_progress, showing_ranking
 
     if (!roomId) {
       alert('Nenhuma sala encontrada. Retornando ao dashboard.');
       window.location.href = 'dashboard.html';
     }
 
-    async function fetchQuizData() {
+    async function fetchQuizState() {
       try {
-        const response = await fetch(`/api/rooms/${roomId}/quiz`);
-        const data = await response.json();
+        const response = await fetch(`/api/rooms/${roomId}/state`);
+        const state = await response.json();
 
         if (response.ok) {
-          document.getElementById('quizName').textContent = data.name;
-          questions = data.questions;
-          totalParticipants = data.participantsCount;
+          gameState = state.status;
 
-          if (isHost) {
-            document.getElementById('nextQuestionBtn').style.display = 'block';
-          } else {
-            checkGameStatus();
+          // Atualiza o título do quiz
+          if (state.name) {
+            document.getElementById('quizName').textContent = state.name;
           }
+
+          // Atualiza a exibição com base no estado
+          if (state.status === 'waiting') {
+            showWaitingSection();
+          } else if (state.status === 'in_progress') {
+            questions = state.questions || [];
+            renderQuestions();
+          } else if (state.status === 'showing_ranking') {
+            renderRanking(state.ranking);
+          }
+        } else {
+          alert('Erro ao carregar o estado do jogo.');
         }
       } catch (error) {
-        alert('Erro ao carregar o quiz.');
-        window.location.href = 'dashboard.html';
+        console.error('Erro ao buscar estado do quiz:', error);
       }
     }
 
-    function renderQuestion() {
-      if (currentQuestionIndex >= questions.length) {
-        document.getElementById('quizContent').innerHTML = '<h2>Quiz Finalizado!</h2>';
+    function showWaitingSection() {
+      document.getElementById('waitingSection').style.display = 'block';
+      document.getElementById('questionsContainer').style.display = 'none';
+      document.getElementById('controlsSection').style.display = 'none';
+    }
+
+    function renderQuestions() {
+      const questionsContainer = document.getElementById('questionsContainer');
+      questionsContainer.innerHTML = '';
+      questionsContainer.style.display = 'block';
+      document.getElementById('waitingSection').style.display = 'none';
+
+      document.getElementById('quizName').textContent = '';
+
+      questions.forEach((question, index) => {
+        const questionBlock = document.createElement('div');
+        questionBlock.classList.add('question-block');
+        questionBlock.innerHTML = `
+          <h3>${index + 1}. ${question.texto_pergunta}</h3>
+          <ul class="options-list">
+            ${['A', 'B', 'C', 'D']
+              .map(
+                (option) =>
+                  `<li class="option-item" data-question="${question.id_pergunta}" data-option="${option}">
+                    ${option}: ${question[`alternativa_${option.toLowerCase()}`]}
+                  </li>`
+              )
+              .join('')}
+          </ul>
+        `;
+        questionsContainer.appendChild(questionBlock);
+      });
+
+      // Adiciona event listeners para selecionar respostas
+      const optionItems = document.querySelectorAll('.option-item');
+      optionItems.forEach((item) => {
+        item.addEventListener('click', () => handleAnswer(item));
+      });
+
+      // Mostra controles se for o professor
+      if (isHost) {
+        document.getElementById('controlsSection').style.display = 'block';
+      }
+    }
+
+    async function handleAnswer(element) {
+      const questionId = element.getAttribute('data-question');
+      const selectedOption = element.getAttribute('data-option');
+      const userName = sessionStorage.getItem('userName');
+
+      if (!userName) {
+        alert('Nome do usuário não encontrado. Faça login novamente.');
         return;
       }
 
-      const question = questions[currentQuestionIndex];
-      answersCount = 0;
+      // Marcar a resposta como selecionada
+      const parentList = element.parentElement;
+      [...parentList.children].forEach((item) => item.classList.remove('selected'));
+      element.classList.add('selected');
 
-      document.getElementById('questionText').textContent = question.texto_pergunta;
-
-      const optionsList = document.getElementById('optionsList');
-      optionsList.innerHTML = '';
-      ['A', 'B', 'C', 'D'].forEach((option) => {
-        const li = document.createElement('li');
-        li.textContent = `${option}: ${question[`alternativa_${option.toLowerCase()}`]}`;
-        if (!isHost) {
-          li.addEventListener('click', () => handleAnswer(option));
-        }
-        optionsList.appendChild(li);
-      });
-
-      updateProgress();
-    }
-
-    function updateProgress() {
-      const answersText = document.getElementById('answersText');
-      answersText.textContent = `${answersCount} / ${totalParticipants}`;
-    }
-
-    async function handleAnswer(answer) {
+      // Enviar a resposta para o servidor
       try {
         const response = await fetch(`/api/rooms/${roomId}/answer`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ questionIndex: currentQuestionIndex, answer })
+          body: JSON.stringify({ id_sala: roomId, questionId, answer: selectedOption, userName }),
         });
 
-        if (response.ok) {
-          alert('Resposta enviada!');
-        } else {
-          alert('Erro ao enviar a resposta.');
+        if (!response.ok) {
+          const result = await response.json();
+          alert(result.error || 'Erro ao enviar resposta.');
         }
       } catch (error) {
-        alert('Erro ao enviar a resposta. Tente novamente.');
+        console.error('Erro ao enviar resposta:', error);
       }
     }
 
-    async function checkGameStatus() {
-      try {
-        const response = await fetch(`/api/rooms/${roomId}/status`);
-        const { status } = await response.json();
+    function renderRanking(ranking) {
+      if (!ranking || ranking.length === 0) {
+        document.getElementById('quizContent').innerHTML = '<h2>Ranking não disponível.</h2>';
+        return;
+      }
 
-        if (status === 'started') {
-          document.getElementById('waitingMessage').style.display = 'none';
-          document.getElementById('quizContent').style.display = 'block';
-          renderQuestion();
-        } else {
-          document.getElementById('waitingMessage').style.display = 'block';
-          setTimeout(checkGameStatus, 2000); // Verifica o status a cada 2 segundos
+      const rankingHTML = ranking
+        .map(
+          (player, index) =>
+            `<tr>
+              <td>${index + 1}</td>
+              <td>${player.nome}</td>
+              <td>${player.pontos} pontos</td>
+            </tr>`
+        )
+        .join('');
+
+      document.getElementById('quizContent').innerHTML = `
+        <h2>Ranking Final</h2>
+        <table class="ranking-table">
+          <thead>
+            <tr>
+              <th>Posição</th>
+              <th>Nome</th>
+              <th>Pontos</th>
+            </tr>
+          </thead>
+          <tbody>${rankingHTML}</tbody>
+        </table>
+      `;
+    }
+
+    async function finishQuiz() {
+      if (isHost) {
+        try {
+          const response = await fetch(`/api/rooms/${roomId}/finish`, {
+            method: 'PUT',
+          });
+
+          if (response.ok) {
+            const { ranking } = await response.json();
+
+            // Atualizar o estado global para mostrar o ranking
+            gameState = 'showing_ranking';
+            renderRanking(ranking);
+          } else {
+            alert('Erro ao encerrar o quiz.');
+          }
+        } catch (error) {
+          console.error('Erro ao encerrar o quiz:', error);
         }
-      } catch (error) {
-        alert('Erro ao verificar o status do jogo.');
       }
     }
 
-    document.getElementById('nextQuestionBtn').addEventListener('click', () => {
-      currentQuestionIndex++;
-      renderQuestion();
-    });
+    document.getElementById('finishQuizBtn').addEventListener('click', finishQuiz);
 
-    fetchQuizData();
+    setInterval(fetchQuizState, 2000);
+    fetchQuizState();
   </script>
 </body>
 </html>

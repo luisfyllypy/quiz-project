@@ -28,21 +28,22 @@
       e.preventDefault();
       const codigo_sala = document.getElementById('codigo_sala').value;
       const nome = document.getElementById('nome').value;
-  
+
       try {
         const response = await fetch('/api/rooms/join', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ codigo_sala, nome })
         });
-  
+
         const result = await response.json();
-  
+
         if (response.ok) {
           // Armazenar os dados da sala no sessionStorage
           sessionStorage.setItem('roomId', result.id_sala);
           sessionStorage.setItem('roomCode', codigo_sala);
           sessionStorage.setItem('isHost', false); // Participante, não chefe
+          sessionStorage.setItem('userName', nome); // Armazena o nome do participante
           alert('Bem-vindo à sala!');
           window.location.href = 'quiz.html';
         } else {

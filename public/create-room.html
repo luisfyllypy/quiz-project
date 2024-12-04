@@ -20,6 +20,7 @@
 
       <button type="submit">Criar Sala</button>
     </form>
+    <div id="loading" style="display: none;">Carregando...</div>
     <a href="dashboard.html">Voltar</a>
   </div>
 
@@ -33,6 +34,9 @@
     }
 
     async function fetchGroups() {
+      const loadingElement = document.getElementById('loading');
+      loadingElement.style.display = 'block';
+
       try {
         const response = await fetch(`/api/groups/${user.id_usuario}`);
         const groups = await response.json();
@@ -44,6 +48,9 @@
         }
       } catch (error) {
         document.getElementById('grupo').innerHTML = `<option value="" disabled>Erro ao carregar grupos</option>`;
+        console.error('Erro ao buscar grupos:', error);
+      } finally {
+        loadingElement.style.display = 'none';
       }
     }
 
@@ -66,7 +73,12 @@
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       const id_grupo = document.getElementById('grupo').value;
-      const nome_sala = document.getElementById('nome_sala').value || `Sala de ${user.nome}`;
+      const nome_sala = document.getElementById('nome_sala').value.trim() || `Sala de ${user.nome}`;
+
+      if (!id_grupo) {
+        alert('Por favor, selecione um grupo de perguntas.');
+        return;
+      }
 
       try {
         const response = await fetch('/api/rooms', {
@@ -81,12 +93,14 @@
           sessionStorage.setItem('isHost', true); // Define que o usuário é o professor
           sessionStorage.setItem('roomId', result.id); // Salva o ID da sala
           sessionStorage.setItem('roomCode', result.codigo_sala); // Salva o código da sala
-          window.location.href = 'room.html'; // Redireciona para o quiz
+          alert('Sala criada com sucesso!');
+          window.location.href = 'room.html'; // Redireciona para a sala
         } else {
           alert(`Erro: ${result.error}`);
         }
       } catch (error) {
         alert('Erro ao criar sala. Tente novamente mais tarde.');
+        console.error('Erro ao criar sala:', error);
       }
     });
 

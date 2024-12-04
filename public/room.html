@@ -26,6 +26,7 @@
   <script>
     const roomCode = sessionStorage.getItem('roomCode');
     const roomId = sessionStorage.getItem('roomId');
+    const isHost = sessionStorage.getItem('isHost') === 'true';
 
     if (!roomCode || !roomId) {
       alert('Sala não encontrada. Retornando ao dashboard.');
@@ -35,9 +36,9 @@
     document.getElementById('roomCode').textContent = roomCode;
 
     // Alternar exibição do código da sala
-    const toggleCodeBtn = document.getElementById('toggleCodeBtn');
-    toggleCodeBtn.addEventListener('click', () => {
+    document.getElementById('toggleCodeBtn').addEventListener('click', () => {
       const roomCodeElement = document.getElementById('roomCode');
+      const toggleCodeBtn = document.getElementById('toggleCodeBtn');
       if (roomCodeElement.style.display === 'none') {
         roomCodeElement.style.display = 'inline';
         toggleCodeBtn.textContent = 'Ocultar Código';
@@ -47,19 +48,14 @@
       }
     });
 
-    // Atualizar lista de participantes em tempo real
+    // Atualizar lista de participantes
     async function fetchParticipants() {
       try {
         const response = await fetch(`/api/rooms/${roomId}/participants`);
         const participants = await response.json();
-
-        if (response.ok) {
-          renderParticipants(participants);
-        } else {
-          alert('Erro ao carregar participantes.');
-        }
+        if (response.ok) renderParticipants(participants);
       } catch (error) {
-        alert('Erro ao carregar participantes. Tente novamente mais tarde.');
+        console.error('Erro ao carregar participantes:', error);
       }
     }
 
@@ -67,7 +63,7 @@
       const participantList = document.getElementById('participantList');
       const participantCount = document.getElementById('participantCount');
       participantList.innerHTML = '';
-      participants.forEach((participant) => {
+      participants.forEach(participant => {
         const li = document.createElement('li');
         li.textContent = participant.nome;
         participantList.appendChild(li);
@@ -75,25 +71,24 @@
       participantCount.textContent = participants.length;
     }
 
-    setInterval(fetchParticipants, 2000); // Atualiza a cada 2 segundos
-
-    // Iniciar o jogo
+    // Iniciar jogo
     document.getElementById('startGameBtn').addEventListener('click', async () => {
+      if (!isHost) return;
+
       try {
         const response = await fetch(`/api/rooms/${roomId}/start`, { method: 'PUT' });
-
         if (response.ok) {
-          alert('Jogo iniciado com sucesso!');
-          // Redirecionar para a página do quiz
+          alert('Jogo iniciado!');
           window.location.href = 'quiz.html';
         } else {
-          alert('Erro ao iniciar o jogo. Tente novamente.');
+          alert('Erro ao iniciar o jogo.');
         }
       } catch (error) {
-        alert('Erro ao tentar iniciar o jogo. Tente novamente mais tarde.');
+        alert('Erro ao iniciar o jogo. Tente novamente mais tarde.');
       }
     });
 
+    setInterval(fetchParticipants, 2000);
     fetchParticipants();
   </script>
 </body>

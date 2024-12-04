@@ -200,7 +200,17 @@ app.put('/api/groups/:id_grupo', (req, res) => {
 
 // Rota para adicionar uma pergunta a um grupo
 app.post('/api/questions', (req, res) => {
-  const { id_grupo, texto_pergunta, alternativa_a, alternativa_b, alternativa_c, alternativa_d, alternativa_correta, ordem, tempo_resposta } = req.body;
+  const {
+    id_grupo,
+    texto_pergunta,
+    alternativa_a,
+    alternativa_b,
+    alternativa_c,
+    alternativa_d,
+    alternativa_correta,
+    ordem,
+    tempo_resposta
+  } = req.body;
 
   if (!id_grupo || !texto_pergunta || !alternativa_a || !alternativa_b || !alternativa_c || !alternativa_d || !alternativa_correta) {
     return res.status(400).json({ error: 'Todos os campos obrigatórios devem ser preenchidos.' });
@@ -210,15 +220,31 @@ app.post('/api/questions', (req, res) => {
     INSERT INTO perguntas (id_grupo, texto_pergunta, alternativa_a, alternativa_b, alternativa_c, alternativa_d, alternativa_correta, ordem, tempo_resposta)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
-  db.run(query, [id_grupo, texto_pergunta, alternativa_a, alternativa_b, alternativa_c, alternativa_d, alternativa_correta, ordem || 0, tempo_resposta || 60], function (err) {
-    if (err) {
-      console.error(err.message);
-      res.status(500).json({ error: 'Erro ao adicionar pergunta.' });
-    } else {
-      res.status(201).json({ message: 'Pergunta adicionada com sucesso!', id: this.lastID });
+
+  db.run(
+    query,
+    [
+      id_grupo,
+      texto_pergunta,
+      alternativa_a,
+      alternativa_b,
+      alternativa_c,
+      alternativa_d,
+      alternativa_correta,
+      ordem || null,
+      tempo_resposta || 60
+    ],
+    function (err) {
+      if (err) {
+        console.error('Erro ao adicionar pergunta:', err.message);
+        return res.status(500).json({ error: 'Erro ao adicionar pergunta.' });
+      }
+
+      res.status(201).json({ message: 'Pergunta adicionada com sucesso!', id_pergunta: this.lastID });
     }
-  });
+  );
 });
+
 
 // Rota para listar perguntas de um grupo
 app.get('/api/questions/group/:id_grupo', (req, res) => {
@@ -292,40 +318,26 @@ app.delete('/api/questions/:id_pergunta', (req, res) => {
 
 // Rota para criar uma sala
 app.post('/api/rooms', (req, res) => {
-  const { id_usuario, id_grupo } = req.body;
+  const { id_usuario, id_grupo, nome_sala } = req.body;
 
-  if (!id_usuario || !id_grupo) {
-    return res.status(400).json({ error: 'ID do usuário e ID do grupo de perguntas são obrigatórios.' });
+  if (!id_usuario || !id_grupo || !nome_sala) {
+    return res.status(400).json({ error: 'Todos os campos são obrigatórios.' });
   }
 
-  const codigo_sala = Math.random().toString(36).substr(2, 8).toUpperCase(); // Gera um código alfanumérico único
+  const codigo_sala = Math.random().toString(36).substr(2, 8).toUpperCase(); // Gera um código único
 
   const query = `
-    INSERT INTO salas (id_usuario, codigo_sala, id_grupo)
-    VALUES (?, ?, ?)
+    INSERT INTO salas (id_usuario, codigo_sala, id_grupo, nome_sala)
+    VALUES (?, ?, ?, ?)
   `;
-  db.run(query, [id_usuario, codigo_sala, id_grupo], function (err) {
-    if (err) {
-      console.error(err.message);
-      res.status(500).json({ error: 'Erro ao criar sala.' });
-    } else {
-      res.status(201).json({ message: 'Sala criada com sucesso!', codigo_sala: codigo_sala, id: this.lastID });
-    }
-  });
-});
 
-// Rota para listar salas criadas por um usuário
-app.get('/api/rooms/:id_usuario', (req, res) => {
-  const { id_usuario } = req.params;
-
-  const query = `SELECT * FROM salas WHERE id_usuario = ? AND status = 'ativa'`;
-  db.all(query, [id_usuario], (err, rows) => {
+  db.run(query, [id_usuario, codigo_sala, id_grupo, nome_sala], function (err) {
     if (err) {
-      console.error(err.message);
-      res.status(500).json({ error: 'Erro ao listar salas.' });
-    } else {
-      res.status(200).json(rows);
+      console.error('Erro ao criar sala:', err.message);
+      return res.status(500).json({ error: 'Erro ao criar sala.' });
     }
+
+    res.status(201).json({ message: 'Sala criada com sucesso!', id: this.lastID, codigo_sala });
   });
 });
 
@@ -439,37 +451,287 @@ app.get('/api/rooms/:id_sala/status', (req, res) => {
 
 app.put('/api/rooms/:id_sala/start', (req, res) => {
   const { id_sala } = req.params;
-
-  const query = `UPDATE salas SET status = 'started' WHERE id_sala = ?`;
-  db.run(query, [id_sala], function (err) {
-    if (err) {
-      console.error(err.message);
-      res.status(500).json({ error: 'Erro ao iniciar o jogo.' });
-    } else {
-      res.status(200).json({ message: 'Jogo iniciado com sucesso!' });
-    }
-  });
-});
-
-app.put('/api/rooms/:id_sala/start', (req, res) => {
-  const { id_sala } = req.params;
-
-  const query = `UPDATE salas SET status = 'started' WHERE id_sala = ?`;
+  const query = `UPDATE salas SET status = 'in_progress' WHERE id_sala = ?`;
 
   db.run(query, [id_sala], function (err) {
     if (err) {
       console.error(err.message);
       res.status(500).json({ error: 'Erro ao iniciar o jogo.' });
     } else {
-      res.status(200).json({ message: 'Jogo iniciado com sucesso.' });
+      res.status(200).json({ message: 'Jogo iniciado!' });
     }
   });
 });
 
 app.post('/api/rooms/:id_sala/answer', (req, res) => {
   const { id_sala } = req.params;
-  const { questionIndex, answer } = req.body;
+  const { questionId, answer, userName } = req.body;
 
-  // Aqui você pode salvar a resposta no banco de dados ou atualizar a lógica
-  res.status(200).json({ message: 'Resposta registrada com sucesso.' });
+  if (!id_sala || !questionId || !answer || !userName) {
+    return res.status(400).json({ error: 'Dados incompletos.' });
+  }
+
+  const checkQuery = `
+    SELECT 1 FROM respostas
+    WHERE id_participante = (SELECT id_participante FROM participantes WHERE id_sala = ? AND nome = ?)
+    AND id_pergunta = ?
+  `;
+
+  db.get(checkQuery, [id_sala, userName, questionId], (err, row) => {
+    if (err) {
+      console.error('Erro ao verificar resposta:', err.message);
+      return res.status(500).json({ error: 'Erro ao verificar resposta.' });
+    }
+
+    if (row) {
+      return res.status(400).json({ error: 'Você já respondeu esta pergunta.' });
+    }
+
+    const query = `
+      INSERT INTO respostas (id_participante, id_pergunta, id_sala, resposta, correta, pontos)
+      VALUES (
+        (SELECT id_participante FROM participantes WHERE id_sala = ? AND nome = ?),
+        ?,
+        ?,
+        ?,
+        CASE
+          WHEN ? = (SELECT alternativa_correta FROM perguntas WHERE id_pergunta = ?) THEN 1
+          ELSE 0
+        END,
+        CASE
+          WHEN ? = (SELECT alternativa_correta FROM perguntas WHERE id_pergunta = ?) THEN 1
+          ELSE 0
+        END
+      )
+    `;
+
+    db.run(
+      query,
+      [id_sala, userName, questionId, id_sala, answer, answer, questionId, answer, questionId],
+      function (err) {
+        if (err) {
+          console.error('Erro ao registrar resposta:', err.message);
+          res.status(500).json({ error: 'Erro ao registrar resposta.' });
+        } else {
+          res.status(200).json({ message: 'Resposta registrada com sucesso!' });
+        }
+      }
+    );
+  });
+});
+
+app.get('/api/rooms/:id_sala/question/:index', (req, res) => {
+  const { id_sala, index } = req.params;
+
+  const query = `
+    SELECT * FROM perguntas
+    WHERE id_grupo = (SELECT id_grupo FROM salas WHERE id_sala = ?)
+    ORDER BY ordem ASC LIMIT 1 OFFSET ?
+  `;
+  db.get(query, [id_sala, index], (err, row) => {
+    if (err) {
+      console.error(err.message);
+      res.status(500).json({ error: 'Erro ao carregar pergunta.' });
+    } else {
+      res.status(200).json(row);
+    }
+  });
+});
+
+app.get('/api/rooms/:id_sala/state', (req, res) => {
+  const { id_sala } = req.params;
+
+  const query = `
+    SELECT status, current_question, id_grupo
+    FROM salas
+    WHERE id_sala = ?
+  `;
+
+  db.get(query, [id_sala], (err, row) => {
+    if (err) {
+      console.error(err.message);
+      res.status(500).json({ error: 'Erro ao buscar o estado da sala.' });
+    } else if (!row) {
+      res.status(404).json({ error: 'Sala não encontrada.' });
+    } else {
+      if (row.status === 'in_progress') {
+        const questionsQuery = `
+          SELECT id_pergunta, texto_pergunta, alternativa_a, alternativa_b, alternativa_c, alternativa_d
+          FROM perguntas
+          WHERE id_grupo = ?
+          ORDER BY ordem ASC
+        `;
+        db.all(questionsQuery, [row.id_grupo], (err, questions) => {
+          if (err) {
+            console.error(err.message);
+            res.status(500).json({ error: 'Erro ao buscar perguntas.' });
+          } else {
+            const currentQuestionIndex = row.current_question;
+            const currentQuestion =
+              currentQuestionIndex < questions.length ? questions[currentQuestionIndex] : null;
+
+            res.status(200).json({
+              status: row.status,
+              questions,
+              currentQuestion,
+            });
+          }
+        });
+      } else if (row.status === 'showing_ranking') {
+        const rankingQuery = `
+          SELECT participantes.nome, SUM(respostas.pontos) AS pontos
+          FROM participantes
+          JOIN respostas ON participantes.id_participante = respostas.id_participante
+          WHERE participantes.id_sala = ?
+          GROUP BY participantes.nome
+          ORDER BY pontos DESC
+        `;
+        db.all(rankingQuery, [id_sala], (err, ranking) => {
+          if (err) {
+            console.error(err.message);
+            res.status(500).json({ error: 'Erro ao buscar o ranking.' });
+          } else {
+            res.status(200).json({
+              status: row.status,
+              ranking,
+            });
+          }
+        });
+      } else {
+        res.status(200).json({ status: row.status });
+      }
+    }
+  });
+});
+
+app.put('/api/rooms/:id_sala/end-question', (req, res) => {
+  const { id_sala } = req.params;
+  const query = `UPDATE salas SET status = 'showing_ranking' WHERE id_sala = ?`;
+  db.run(query, [id_sala], function (err) {
+    if (err) {
+      console.error(err.message);
+      res.status(500).json({ error: 'Erro ao encerrar a pergunta.' });
+    } else {
+      res.status(200).json({ message: 'Pergunta encerrada!' });
+    }
+  });
+});
+
+app.put('/api/rooms/:id_sala/finish', (req, res) => {
+  const { id_sala } = req.params;
+
+  // Atualizar o status da sala para 'showing_ranking'
+  const updateQuery = `
+    UPDATE salas
+    SET status = 'showing_ranking'
+    WHERE id_sala = ?
+  `;
+
+  db.run(updateQuery, [id_sala], function (err) {
+    if (err) {
+      console.error('Erro ao encerrar o quiz:', err.message);
+      return res.status(500).json({ error: 'Erro ao encerrar o quiz.' });
+    }
+
+    // Buscar o ranking para todos os participantes
+    const rankingQuery = `
+      SELECT participantes.nome, SUM(respostas.pontos) AS pontos
+      FROM participantes
+      LEFT JOIN respostas ON participantes.id_participante = respostas.id_participante
+      WHERE participantes.id_sala = ?
+      GROUP BY participantes.nome
+      ORDER BY pontos DESC
+    `;
+
+    db.all(rankingQuery, [id_sala], (err, ranking) => {
+      if (err) {
+        console.error('Erro ao buscar ranking:', err.message);
+        return res.status(500).json({ error: 'Erro ao buscar ranking.' });
+      }
+
+      // Retornar o ranking atualizado
+      res.status(200).json({ message: 'Quiz encerrado!', ranking });
+    });
+  });
+});
+
+
+app.put('/api/rooms/:id_sala/next-question', (req, res) => {
+  const { id_sala } = req.params;
+
+  const query = `
+    UPDATE salas
+    SET current_question = current_question + 1
+    WHERE id_sala = ?
+      AND current_question < (SELECT COUNT(*) FROM perguntas WHERE id_grupo = (SELECT id_grupo FROM salas WHERE id_sala = ?))
+  `;
+
+  db.run(query, [id_sala, id_sala], function (err) {
+    if (err) {
+      console.error(err.message);
+      res.status(500).json({ error: 'Erro ao avançar para a próxima pergunta.' });
+    } else if (this.changes === 0) {
+      res.status(400).json({ error: 'Não há mais perguntas para avançar.' });
+    } else {
+      res.status(200).json({ message: 'Próxima pergunta iniciada.' });
+    }
+  });
+});
+
+app.get('/api/rooms/:id_usuario', (req, res) => {
+  const { id_usuario } = req.params;
+
+  const query = `
+    SELECT id_sala, nome_sala, data_criacao, status
+    FROM salas
+    WHERE id_usuario = ?
+  `;
+
+  db.all(query, [id_usuario], (err, rows) => {
+    if (err) {
+      console.error('Erro ao buscar salas:', err.message);
+      res.status(500).json({ error: 'Erro ao buscar salas.' });
+    } else {
+      res.status(200).json(rows);
+    }
+  });
+});
+
+app.delete('/api/rooms/:id_sala', (req, res) => {
+  const { id_sala } = req.params;
+
+  const query = `DELETE FROM salas WHERE id_sala = ?`;
+
+  db.run(query, [id_sala], function (err) {
+    if (err) {
+      console.error('Erro ao excluir sala:', err.message);
+      res.status(500).json({ error: 'Erro ao excluir sala.' });
+    } else if (this.changes === 0) {
+      res.status(404).json({ error: 'Sala não encontrada.' });
+    } else {
+      res.status(200).json({ message: 'Sala excluída com sucesso!' });
+    }
+  });
+});
+
+app.get('/api/rooms/:id_sala/ranking', (req, res) => {
+  const { id_sala } = req.params;
+
+  const query = `
+    SELECT participantes.nome, SUM(respostas.pontos) AS pontos
+    FROM participantes
+    JOIN respostas ON participantes.id_participante = respostas.id_participante
+    WHERE participantes.id_sala = ?
+    GROUP BY participantes.nome
+    ORDER BY pontos DESC
+  `;
+
+  db.all(query, [id_sala], (err, rows) => {
+    if (err) {
+      console.error('Erro ao buscar ranking:', err.message);
+      res.status(500).json({ error: 'Erro ao buscar ranking.' });
+    } else {
+      res.status(200).json(rows);
+    }
+  });
 });

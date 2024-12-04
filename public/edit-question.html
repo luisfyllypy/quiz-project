@@ -48,8 +48,6 @@
     const questionId = sessionStorage.getItem('questionId');
     const groupId = sessionStorage.getItem('groupId');
 
-    console.log('Question ID recuperado:', questionId); // Verifica o ID recuperado do sessionStorage
-
     if (!groupId) {
       alert('Nenhum grupo selecionado. Retornando para a página de grupos.');
       window.location.href = 'manage-groups.html';
@@ -57,7 +55,9 @@
 
     if (action === 'edit' && questionId) {
       pageTitle.textContent = 'Editar Pergunta';
-      fetchQuestionData(questionId); // Busca os dados da pergunta com o ID correto
+      fetchQuestionData(questionId);
+    } else {
+      pageTitle.textContent = 'Adicionar Pergunta';
     }
 
     async function fetchQuestionData(id) {
@@ -93,15 +93,25 @@
         alternativa_d: document.getElementById('alternativa_d').value,
         alternativa_correta: document.getElementById('alternativa_correta').value,
         tempo_resposta: parseInt(document.getElementById('tempo_resposta').value, 10),
-        ordem: 0 // Adicione "ordem" caso seja necessário no banco
+        id_grupo: groupId, // Associar ao grupo
+        ordem: 0 // Opcional: Adicione ordem se necessário
       };
 
       try {
-        const response = await fetch(`/api/questions/${questionId}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(questionData)
-        });
+        let response;
+        if (action === 'edit' && questionId) {
+          response = await fetch(`/api/questions/${questionId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(questionData)
+          });
+        } else {
+          response = await fetch('/api/questions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(questionData)
+          });
+        }
 
         if (response.ok) {
           alert('Pergunta salva com sucesso!');
